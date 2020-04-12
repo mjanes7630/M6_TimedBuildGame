@@ -1,12 +1,7 @@
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.Insets;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
@@ -17,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 public class TimedBuildGame
@@ -24,16 +20,49 @@ public class TimedBuildGame
    
    
    public static void main(String[] args)
-   {  
-      int NUM_CARDS_PER_HAND = 7;
-      int NUM_PLAYERS = 2;
-      
-      // TODO Auto-generated method stub
+   {
       GameModel model = new GameModel();
       GameView view = new GameView();
       GameController controller = new GameController(model, view);
+      GameTimer timer = new GameTimer(controller);
       
       controller.init();
+      timer.start();
+   }
+}
+
+class GameTimer extends Thread {
+   GameController controller;
+   private static Timer gameTimer;
+   
+   // Construct class with controller
+   public GameTimer (GameController controller) {
+      this.controller = controller;
+   }
+
+   // Thread run() method override
+   public void run() {
+      new Timer(1000, new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            controller.updateTimer();
+            doNothing(10);
+         }
+      });
+   }
+
+   protected void doNothing(int pauseMilli)
+   {
+      try {
+         Thread.sleep(pauseMilli);
+      }
+      catch (InterruptedException e) {
+         System.out.println("Interruption");
+      }
+   }
+
+   public static void startTimer()
+   {
+      gameTimer.start();
    }
 }
 
@@ -47,8 +76,11 @@ class GameView
    JLabel[] computerCardBacks= new JLabel[GameModel.NUM_CARDS_PER_HAND];
    JLabel[] spacerBackCards = new JLabel[GameModel.NUM_PLAYERS];
    
+   JButton startButton, stopButton;
+   
    static int playerScore = 0;
    static int compScore = 0;
+   static int counter = 0;
    int rounds =  GameModel.NUM_CARDS_PER_HAND;
    static boolean playFlag = false;
    
@@ -69,9 +101,13 @@ class GameView
       playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
       
       // add Timer
-      int counter = 0;
-      JLabel timer = new JLabel(String.format("%01d", counter), JLabel.CENTER);
+      startButton = new JButton("Start");
+      stopButton = new JButton("Stop");
+      JLabel timer = new JLabel(String.format("%01d:%02d", counter,counter),
+                                              JLabel.CENTER);
       myCardTable.pnlTimer.add(timer);
+      myCardTable.pnlTimer.add(startButton);
+      myCardTable.pnlTimer.add(stopButton);
     
       // Start with the Player
       JButton playButton = new JButton();
@@ -86,7 +122,18 @@ class GameView
          myCardTable.pnlHumanHand.add(humanLabels[i]);
       }
       
+      startButton.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            System.out.println("start");
+            GameTimer.startTimer();
+         }
+      });
       
+      stopButton.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            System.out.println("stop");
+         }
+      });
       
       playButton.addActionListener(new ActionListener() 
       {
@@ -383,10 +430,11 @@ class GameView
          add(pnlPlayArea, BorderLayout.CENTER);
          
          // Timer Section
-         pnlTimer = new JPanel(new GridLayout(3, 1));
+         //pnlTimer = new JPanel(new GridLayout(3, 1));
+         pnlTimer = new JPanel(new FlowLayout(FlowLayout.TRAILING));
          pnlTimer.setBorder(new TitledBorder("Game Clock"));
-         pnlTimer.setPreferredSize(new Dimension(200, 600));
-         pnlTimer.setMinimumSize(new Dimension(200, 600));
+         pnlTimer.setPreferredSize(new Dimension(150, 600));
+         pnlTimer.setMinimumSize(new Dimension(150, 600));
          add(pnlTimer, BorderLayout.EAST);
          
          
@@ -413,6 +461,15 @@ class GameView
        */
       int getNumPlayers() { return numPlayers; }
    }
+
+   public void updateTimer() {
+      counter++;
+      myCardTable.pnlTimer.setVisible(false);
+      myCardTable.pnlTimer.setVisible(true);
+      System.out.println(counter);
+   }
+
+
 }
 
 // ********************** MODEL ***********************************************
@@ -434,8 +491,6 @@ class GameModel
          NUM_PLAYERS, NUM_CARDS_PER_HAND);
    
    public CardGameFramework getFramework(){ return lowCardGame; }
-   
-   
    
    // class Card *****************************
    static class Card
@@ -1079,7 +1134,11 @@ class GameController
       theModel = model;
       theView = view;     
    }
-   
+
+   public void updateTimer() {
+      theView.updateTimer();
+   }
+
    public void init()
    {
       framework = theModel.getFramework();
