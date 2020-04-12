@@ -1,4 +1,7 @@
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -62,10 +65,13 @@ class GameView
       playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
       // add Timer
       int counter = 0;
-      JLabel timer = new JLabel(String.format("%02d:%02d", counter,counter));
+      JLabel timer = new JLabel(String.format("%02d", counter));
       myCardTable.pnlTimer.add(timer);
     
       // Start with the Player
+      JButton playButton = new JButton();
+      playButton.setText("Play");
+      myCardTable.pnlHumanHand.add(playButton);
       for(int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) 
       {
          // Instance of the CardGameFramework instead of LowCardGame 
@@ -75,9 +81,9 @@ class GameView
          myCardTable.pnlHumanHand.add(humanLabels[i]);
       }
       
-      JButton b = new JButton("Play"); 
       
-      b.addActionListener(new ActionListener() 
+      
+      playButton.addActionListener(new ActionListener() 
       {
          public void actionPerformed(ActionEvent e) 
          {     
@@ -127,7 +133,7 @@ class GameView
             
             if(rounds == 0)
             {
-               //myCardTable.pnlPlayArea.remove(b);
+               playButton.setVisible(false);
                myCardTable.pnlPlayArea.remove(computerLabels[rounds+1]);
                myCardTable.pnlPlayArea.remove(humanLabels[rounds + 1]);
                if(compScore > playerScore) 
@@ -158,8 +164,7 @@ class GameView
          } 
       });
       
-      myCardTable.pnlHumanHand.add(b);
-      b.setSize(50,5);
+      
       
       // Next is the Computer
       for (int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) {
@@ -310,7 +315,7 @@ class GameView
       private int numCardsPerHand;
       private int numPlayers;
 
-      public JPanel pnlComputerHand, pnlHumanHand, pnlPlayArea, pnlTimer;
+      public JPanel pnlComputerHand, pnlHumanHand, pnlPlayArea, pnlTimer, pnlControls;
       
       // Constructor
       CardTable(String title, int numCardsPerHand, int numPlayers) {
@@ -352,22 +357,34 @@ class GameView
          // Top Computer Hand 
          pnlComputerHand = new JPanel(new GridLayout(1,numCardsPerHand));
          pnlComputerHand.setBorder(new TitledBorder("Computer Hand"));
+         pnlComputerHand.setPreferredSize(new Dimension(800,120));
+         pnlComputerHand.setMinimumSize(new Dimension(800, 120));
          add(pnlComputerHand, BorderLayout.NORTH);
          
          // Middle Playing Area
          //pnlPlayArea = new JPanel(new GridLayout(2,numPlayers));
          pnlPlayArea = new JPanel();
          pnlPlayArea.setBorder(new TitledBorder("Playing Area"));
+         pnlPlayArea.setPreferredSize(new Dimension(600, 600));
+         pnlPlayArea.setMinimumSize(new Dimension(600, 600));
          add(pnlPlayArea, BorderLayout.CENTER);
          
          // Timer Section
          pnlTimer = new JPanel(new GridLayout(3, 1));
          pnlTimer.setBorder(new TitledBorder("Game Clock"));
+         pnlTimer.setPreferredSize(new Dimension(200, 600));
+         pnlTimer.setMinimumSize(new Dimension(200, 600));
          add(pnlTimer, BorderLayout.EAST);
          
+         
+         JButton playButton = new JButton();
+         playButton.setText("Play");
          // Bottom Human Player Hand
-         pnlHumanHand = new JPanel(new GridLayout(1,numCardsPerHand));
+         //pnlHumanHand = new JPanel(new GridLayout(1,numCardsPerHand + 1));
+         pnlHumanHand = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
          pnlHumanHand.setBorder(new TitledBorder("Your Hand"));
+         pnlHumanHand.setPreferredSize(new Dimension(600,120));
+         pnlHumanHand.setMinimumSize(new Dimension(600, 120));
          add(pnlHumanHand, BorderLayout.SOUTH);
          
       }
