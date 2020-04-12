@@ -2,7 +2,10 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,6 +45,7 @@ class GameView
    JLabel[] playedCardLabels = new JLabel[GameModel.NUM_PLAYERS];
    JLabel[] playLabelText = new JLabel[GameModel.NUM_PLAYERS];
    JLabel[] computerCardBacks= new JLabel[GameModel.NUM_CARDS_PER_HAND];
+   JLabel[] spacerBackCards = new JLabel[GameModel.NUM_PLAYERS];
    
    static int playerScore = 0;
    static int compScore = 0;
@@ -91,11 +95,13 @@ class GameView
             
             if(!playFlag) 
             {
-               //myCardTable.pnlPlayArea.remove(playLabelText[0]);
-               //myCardTable.pnlPlayArea.remove(playLabelText[1]);
+               myCardTable.pnlPlayArea.remove(spacerBackCards[0]);
                myCardTable.pnlPlayArea.add(computerLabels[rounds]);
                myCardTable.pnlComputerHand.remove(computerCardBacks[rounds]);
+               myCardTable.pnlPlayArea.remove(spacerBackCards[1]);
                myCardTable.pnlPlayArea.add(humanLabels[rounds]);
+               myCardTable.pnlPlayArea.add(playLabelText[0]);
+               myCardTable.pnlPlayArea.add(playLabelText[1]);
                myCardTable.pnlHumanHand.remove(humanLabels[rounds]);
             }   
             
@@ -107,6 +113,8 @@ class GameView
                
                myCardTable.pnlPlayArea.remove(humanLabels[rounds + 1]);
                myCardTable.pnlPlayArea.add(humanLabels[rounds]);
+               myCardTable.pnlPlayArea.add(playLabelText[0]);
+               myCardTable.pnlPlayArea.add(playLabelText[1]);
                myCardTable.pnlHumanHand.remove(humanLabels[rounds]);
             }  
             
@@ -173,6 +181,11 @@ class GameView
          computerCardBacks[i] = new JLabel(GUICard.getBackCardIcon());
          myCardTable.pnlComputerHand.add(computerCardBacks[i]);
       }
+      // Add two spacer card backs
+      spacerBackCards[0] = new JLabel(GUICard.getBackCardIcon());
+      spacerBackCards[1] = new JLabel(GUICard.getBackCardIcon());
+      myCardTable.pnlPlayArea.add(spacerBackCards[0]);
+      myCardTable.pnlPlayArea.add(spacerBackCards[1]);
       myCardTable.pnlPlayArea.add(playLabelText[0]);
       myCardTable.pnlPlayArea.add(playLabelText[1]);
       
@@ -315,7 +328,8 @@ class GameView
       private int numCardsPerHand;
       private int numPlayers;
 
-      public JPanel pnlComputerHand, pnlHumanHand, pnlPlayArea, pnlTimer, pnlControls;
+      public JPanel pnlComputerHand, pnlHumanHand, pnlPlayArea, 
+                    pnlTimer, pnlControls;
       
       // Constructor
       CardTable(String title, int numCardsPerHand, int numPlayers) {
@@ -362,8 +376,7 @@ class GameView
          add(pnlComputerHand, BorderLayout.NORTH);
          
          // Middle Playing Area
-         //pnlPlayArea = new JPanel(new GridLayout(2,numPlayers));
-         pnlPlayArea = new JPanel();
+         pnlPlayArea = new JPanel(new GridLayout(3,2));
          pnlPlayArea.setBorder(new TitledBorder("Playing Area"));
          pnlPlayArea.setPreferredSize(new Dimension(600, 600));
          pnlPlayArea.setMinimumSize(new Dimension(600, 600));
