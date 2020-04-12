@@ -67,9 +67,10 @@ class GameView
       // create labels
       playLabelText[0] = new JLabel("Computer", JLabel.CENTER);
       playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
+      
       // add Timer
       int counter = 0;
-      JLabel timer = new JLabel(String.format("%02d", counter));
+      JLabel timer = new JLabel(String.format("%01d", counter), JLabel.CENTER);
       myCardTable.pnlTimer.add(timer);
     
       // Start with the Player
@@ -110,7 +111,6 @@ class GameView
                myCardTable.pnlPlayArea.remove(computerLabels[rounds+1]);
                myCardTable.pnlPlayArea.add(computerLabels[rounds]);
                myCardTable.pnlComputerHand.remove(computerCardBacks[rounds]);
-               
                myCardTable.pnlPlayArea.remove(humanLabels[rounds + 1]);
                myCardTable.pnlPlayArea.add(humanLabels[rounds]);
                myCardTable.pnlPlayArea.add(playLabelText[0]);
@@ -147,23 +147,23 @@ class GameView
                if(compScore > playerScore) 
                {
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(compScore) + " Winner", JLabel.CENTER));
+                        toString(compScore) + " Points Scored: Winner", JLabel.CENTER));
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(playerScore), JLabel.CENTER));
+                        toString(playerScore) + " Points Scored", JLabel.CENTER));
                }
                if(compScore < playerScore) 
                {
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(compScore), JLabel.CENTER));
+                        toString(compScore) + " Points Scored", JLabel.CENTER));
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(playerScore) + " Winner", JLabel.CENTER));
+                        toString(playerScore) + " Points Scored: Winner", JLabel.CENTER));
                }
                if(compScore == playerScore)
                {
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(compScore) + "Tie", JLabel.CENTER));
+                        toString(compScore) + " Points Scored: Tie", JLabel.CENTER));
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(playerScore) + "Tie", JLabel.CENTER));
+                        toString(playerScore) + " Points Scored: Tie", JLabel.CENTER));
                }
             }
 
