@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
@@ -32,7 +33,7 @@ public class TimedBuildGame
 
 // ********************** VIEW ************************************************
 class GameView
-{  
+{
    JLabel[] computerLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
    JLabel[] humanLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
    JLabel[] playedCardLabels = new JLabel[GameModel.NUM_PLAYERS];
@@ -59,6 +60,10 @@ class GameView
       // create labels
       playLabelText[0] = new JLabel("Computer", JLabel.CENTER);
       playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
+      // add Timer
+      int counter = 0;
+      JLabel timer = new JLabel(String.format("%02d:%02d", counter,counter));
+      myCardTable.pnlTimer.add(timer);
     
       // Start with the Player
       for(int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) 
@@ -70,7 +75,7 @@ class GameView
          myCardTable.pnlHumanHand.add(humanLabels[i]);
       }
       
-      JButton b = new JButton("Play");
+      JButton b = new JButton("Play"); 
       
       b.addActionListener(new ActionListener() 
       {
@@ -80,8 +85,8 @@ class GameView
             
             if(!playFlag) 
             {
-               myCardTable.pnlPlayArea.remove(playLabelText[0]);
-               myCardTable.pnlPlayArea.remove(playLabelText[1]);
+               //myCardTable.pnlPlayArea.remove(playLabelText[0]);
+               //myCardTable.pnlPlayArea.remove(playLabelText[1]);
                myCardTable.pnlPlayArea.add(computerLabels[rounds]);
                myCardTable.pnlComputerHand.remove(computerCardBacks[rounds]);
                myCardTable.pnlPlayArea.add(humanLabels[rounds]);
@@ -103,21 +108,26 @@ class GameView
             
             if(rounds >= 0) {
           
-               if(GUICard.valueAsInt(lowCardGame.getHand(1).inspectCard(rounds)) >
-               GUICard.valueAsInt(lowCardGame.getHand(0).inspectCard(rounds))) 
+               if(GUICard.valueAsInt(lowCardGame.getHand(1).
+                     inspectCard(rounds)) >
+               GUICard.valueAsInt(lowCardGame.getHand(0).
+                     inspectCard(rounds))) 
                {
                   playerScore++;
                }
                
-               if(GUICard.valueAsInt(lowCardGame.getHand(1).inspectCard(rounds)) <
-               GUICard.valueAsInt(lowCardGame.getHand(0).inspectCard(rounds)))
+               if(GUICard.valueAsInt(lowCardGame.getHand(1).
+                     inspectCard(rounds)) <
+               GUICard.valueAsInt(lowCardGame.getHand(0).
+                     inspectCard(rounds)))
                {
                   compScore++;
                }
             }
             
-            if(rounds < 0)
+            if(rounds == 0)
             {
+               //myCardTable.pnlPlayArea.remove(b);
                myCardTable.pnlPlayArea.remove(computerLabels[rounds+1]);
                myCardTable.pnlPlayArea.remove(humanLabels[rounds + 1]);
                if(compScore > playerScore) 
@@ -149,27 +159,17 @@ class GameView
       });
       
       myCardTable.pnlHumanHand.add(b);
-      
+      b.setSize(50,5);
       
       // Next is the Computer
-      for(int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) {
-         computerLabels[i] = (new JLabel(
-               GUICard.getIcon(lowCardGame.getHand(0).inspectCard(i))));
-         
-         // add labels to panels
+      for (int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) {
+         computerLabels[i] = (new JLabel(GUICard.getIcon(lowCardGame.getHand(0).
+                                                         inspectCard(i))));
          computerCardBacks[i] = new JLabel(GUICard.getBackCardIcon());
          myCardTable.pnlComputerHand.add(computerCardBacks[i]);
       }
-      
-      // add two random cards in the play region (player1 + cpu)
-      
-      //Card playerCard = randomCardGenerator();
-      //Card cpuCard = randomCardGenerator();
-      //myCardTable.pnlPlayArea.add(new JLabel(GUICard.getIcon(cpuCard)));
-      //myCardTable.pnlPlayArea.add(new JLabel(GUICard.getIcon(playerCard)));
-      myCardTable.pnlPlayArea.add(playLabelText[0]);             
+      myCardTable.pnlPlayArea.add(playLabelText[0]);
       myCardTable.pnlPlayArea.add(playLabelText[1]);
-            
       
       // show everything to the user
       myCardTable.setVisible(true);
@@ -310,7 +310,7 @@ class GameView
       private int numCardsPerHand;
       private int numPlayers;
 
-      public JPanel pnlComputerHand, pnlHumanHand, pnlPlayArea;
+      public JPanel pnlComputerHand, pnlHumanHand, pnlPlayArea, pnlTimer;
       
       // Constructor
       CardTable(String title, int numCardsPerHand, int numPlayers) {
@@ -355,9 +355,15 @@ class GameView
          add(pnlComputerHand, BorderLayout.NORTH);
          
          // Middle Playing Area
-         pnlPlayArea = new JPanel(new GridLayout(2,numPlayers));
+         //pnlPlayArea = new JPanel(new GridLayout(2,numPlayers));
+         pnlPlayArea = new JPanel();
          pnlPlayArea.setBorder(new TitledBorder("Playing Area"));
          add(pnlPlayArea, BorderLayout.CENTER);
+         
+         // Timer Section
+         pnlTimer = new JPanel(new GridLayout(3, 1));
+         pnlTimer.setBorder(new TitledBorder("Game Clock"));
+         add(pnlTimer, BorderLayout.EAST);
          
          // Bottom Human Player Hand
          pnlHumanHand = new JPanel(new GridLayout(1,numCardsPerHand));
