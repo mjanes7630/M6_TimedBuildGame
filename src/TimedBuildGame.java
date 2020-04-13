@@ -15,12 +15,11 @@ public class TimedBuildGame
       GameView view = new GameView();
       GameController controller = new GameController(model, view);
       GameTimer gameTimer = new GameTimer(controller);
-      
+      controller.testThread(gameTimer);
       controller.init();
-      //gameTimer.start();
+      gameTimer.start();
    }
 }
-
 
 class GameTimer extends Thread {
    private Timer gameTimer;
@@ -33,6 +32,7 @@ class GameTimer extends Thread {
 
    // Thread run() method override
    public void run() {
+      System.out.println("GameTimer thread running");
       gameTimer = new Timer(1000, new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             gameController.updateTimer();
@@ -1127,6 +1127,10 @@ class GameController
       
       this.theView.addStartListener(new StartListener());
       this.theView.addStopListener(new StopListener());
+   }
+   
+   public void testThread(GameTimer timer) {
+      this.gameTimer = timer;
    }
    
    class StartListener implements ActionListener {
