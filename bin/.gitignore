@@ -1,4 +1,4 @@
+/Timer.class
 /GameTimer$1.class
-/GameTimer.class
-/GameView$2.class
-/GameView$3.class
+/GameController$StartListener.class
+/GameController$StopListener.class

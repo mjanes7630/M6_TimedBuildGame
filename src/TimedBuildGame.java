@@ -1,19 +1,9 @@
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.Random;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.Timer;
-import javax.swing.border.TitledBorder;
+import javax.swing.*;
+import javax.swing.border.*;
 
 public class TimedBuildGame
 {   
@@ -24,45 +14,48 @@ public class TimedBuildGame
       GameModel model = new GameModel();
       GameView view = new GameView();
       GameController controller = new GameController(model, view);
-      GameTimer timer = new GameTimer(controller);
+      GameTimer gameTimer = new GameTimer(controller);
       
       controller.init();
-      timer.start();
+      //gameTimer.start();
    }
 }
 
+
 class GameTimer extends Thread {
-   GameController controller;
-   private static Timer gameTimer;
+   private Timer gameTimer;
+   GameController gameController;
    
    // Construct class with controller
-   public GameTimer (GameController controller) {
-      this.controller = controller;
+   public GameTimer (GameController gameController) {
+      this.gameController = gameController;
    }
 
    // Thread run() method override
    public void run() {
-      new Timer(1000, new ActionListener() {
+      gameTimer = new Timer(1000, new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            controller.updateTimer();
+            gameController.updateTimer();
             doNothing(10);
          }
       });
    }
-
-   protected void doNothing(int pauseMilli)
-   {
-      try {
-         Thread.sleep(pauseMilli);
-      }
-      catch (InterruptedException e) {
-         System.out.println("Interruption");
-      }
-   }
-
-   public static void startTimer()
-   {
+   
+   void startTimer() {
       gameTimer.start();
+   }
+   
+   void stopTimer() {
+      gameTimer.stop();
+   }
+   
+   public void doNothing(int milliseconds) {
+      try {
+         Thread.sleep(milliseconds);
+      }
+      catch(InterruptedException e) {
+         System.out.println("Unexpected interrupt");
+      }
    }
 }
 
@@ -75,8 +68,22 @@ class GameView
    JLabel[] playLabelText = new JLabel[GameModel.NUM_PLAYERS];
    JLabel[] computerCardBacks= new JLabel[GameModel.NUM_CARDS_PER_HAND];
    JLabel[] spacerBackCards = new JLabel[GameModel.NUM_PLAYERS];
+   GameTimer gameTimer;
    
-   JButton startButton, stopButton;
+   JButton stopButton = new JButton("Stop");
+   JButton startButton = new JButton("Start");
+   
+   public void addStartListener(ActionListener startListener)
+   {
+      startButton.addActionListener(startListener);
+      
+   }
+   
+   public void addStopListener(ActionListener stopListener)
+   {
+      stopButton.addActionListener(stopListener);
+      
+   }
    
    static int playerScore = 0;
    static int compScore = 0;
@@ -100,9 +107,7 @@ class GameView
       playLabelText[0] = new JLabel("Computer", JLabel.CENTER);
       playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
       
-      // add Timer
-      startButton = new JButton("Start");
-      stopButton = new JButton("Stop");
+      
       JLabel timer = new JLabel(String.format("%01d:%02d", counter,counter),
                                               JLabel.CENTER);
       myCardTable.pnlTimer.add(timer);
@@ -121,19 +126,6 @@ class GameView
          // add labels to panels
          myCardTable.pnlHumanHand.add(humanLabels[i]);
       }
-      
-      startButton.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            System.out.println("start");
-            GameTimer.startTimer();
-         }
-      });
-      
-      stopButton.addActionListener(new ActionListener() {
-         public void actionPerformed(ActionEvent e) {
-            System.out.println("stop");
-         }
-      });
       
       playButton.addActionListener(new ActionListener() 
       {
@@ -468,8 +460,6 @@ class GameView
       myCardTable.pnlTimer.setVisible(true);
       System.out.println(counter);
    }
-
-
 }
 
 // ********************** MODEL ***********************************************
@@ -1128,11 +1118,27 @@ class GameController
    GameModel theModel;
    GameView theView;
    GameModel.CardGameFramework framework;
+   GameTimer gameTimer;
    
    public GameController(GameModel model, GameView view)
    {
       theModel = model;
-      theView = view;     
+      theView = view;
+      
+      this.theView.addStartListener(new StartListener());
+      this.theView.addStopListener(new StopListener());
+   }
+   
+   class StartListener implements ActionListener {
+      public void actionPerformed(ActionEvent e) {
+         gameTimer.startTimer();
+      }
+   }
+   
+   class StopListener implements ActionListener {
+      public void actionPerformed(ActionEvent e) {
+         gameTimer.stopTimer();
+      }
    }
 
    public void updateTimer() {
