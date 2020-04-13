@@ -15,8 +15,7 @@ public class TimedBuildGame
       GameView view = new GameView();
       GameController controller = new GameController(model, view);
       GameTimer gameTimer = new GameTimer(controller);
-      controller.testThread(gameTimer);
-      controller.init();
+      controller.init(gameTimer);
       gameTimer.start();
    }
 }
@@ -32,7 +31,6 @@ class GameTimer extends Thread {
 
    // Thread run() method override
    public void run() {
-      System.out.println("GameTimer thread running");
       gameTimer = new Timer(1000, new ActionListener() {
          public void actionPerformed(ActionEvent e) {
             gameController.updateTimer();
@@ -69,6 +67,7 @@ class GameView
    JLabel[] computerCardBacks= new JLabel[GameModel.NUM_CARDS_PER_HAND];
    JLabel[] spacerBackCards = new JLabel[GameModel.NUM_PLAYERS];
    GameTimer gameTimer;
+   JLabel timer;
    
    JButton stopButton = new JButton("Stop");
    JButton startButton = new JButton("Start");
@@ -108,8 +107,7 @@ class GameView
       playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
       
       
-      JLabel timer = new JLabel(String.format("%01d:%02d", counter,counter),
-                                              JLabel.CENTER);
+      timer = new JLabel("00:00",JLabel.CENTER);
       myCardTable.pnlTimer.add(timer);
       myCardTable.pnlTimer.add(startButton);
       myCardTable.pnlTimer.add(stopButton);
@@ -456,9 +454,7 @@ class GameView
 
    public void updateTimer() {
       counter++;
-      myCardTable.pnlTimer.setVisible(false);
-      myCardTable.pnlTimer.setVisible(true);
-      System.out.println(counter);
+      timer.setText(String.format("%02d:%02d",counter / 60, (counter % (24*3600))%60));
    }
 }
 
@@ -1129,10 +1125,6 @@ class GameController
       this.theView.addStopListener(new StopListener());
    }
    
-   public void testThread(GameTimer timer) {
-      this.gameTimer = timer;
-   }
-   
    class StartListener implements ActionListener {
       public void actionPerformed(ActionEvent e) {
          gameTimer.startTimer();
@@ -1149,8 +1141,9 @@ class GameController
       theView.updateTimer();
    }
 
-   public void init()
+   public void init(GameTimer gameTimer)
    {
+      this.gameTimer = gameTimer;
       framework = theModel.getFramework();
       framework.deal();
       theView.init(framework);
