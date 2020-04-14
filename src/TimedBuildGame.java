@@ -20,6 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
@@ -31,19 +32,58 @@ public class TimedBuildGame
    
    
    public static void main(String[] args)
-   {  
-      // TODO Auto-generated method stub
+   {
       GameModel model = new GameModel();
       GameView view = new GameView();
       GameController controller = new GameController(model, view);
-      
-      controller.init();
+      GameTimer gameTimer = new GameTimer(controller);
+      controller.init(gameTimer);
+      gameTimer.start();
+   }
+}
+
+class GameTimer extends Thread {
+   private Timer gameTimer;
+   GameController gameController;
+   
+   // Construct class with controller
+   public GameTimer (GameController gameController) {
+      this.gameController = gameController;
+   }
+
+   // Thread run() method override
+   public void run() {
+      gameTimer = new Timer(1000, new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            gameController.updateTimer();
+            doNothing(10);
+         }
+      });
+   }
+   
+   void startTimer() {
+      gameTimer.start();
+   }
+   
+   void stopTimer() {
+      gameTimer.stop();
+   }
+   
+   public void doNothing(int milliseconds) {
+      try {
+         Thread.sleep(milliseconds);
+      }
+      catch(InterruptedException e) {
+         System.out.println("Unexpected interrupt");
+      }
    }
 }
 
 // ********************** VIEW ************************************************
 class GameView
 {
+   GameTimer gameTimer;
+   JLabel timer;
    //JLabel[] computerLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
    //JLabel[] humanLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
    //JLabel[] playedCardLabels = new JLabel[GameModel.NUM_PLAYERS];
@@ -59,6 +99,21 @@ class GameView
    static int rightCardValue = 0;
    static int middleCardValue = 0;
    
+   JButton stopButton = new JButton("Stop");
+   JButton startButton = new JButton("Start");
+   
+   public void addStartListener(ActionListener startListener)
+   {
+      startButton.addActionListener(startListener);
+      
+   }
+   
+   public void addStopListener(ActionListener stopListener)
+   {
+      stopButton.addActionListener(stopListener);
+      
+   }
+   
    static int playerScore = 0;
    static int compScore = 0;
    //int rounds =  GameModel.NUM_CARDS_PER_HAND;
@@ -66,6 +121,7 @@ class GameView
    //tracking if players passed a turn
    static boolean computerPassFlag = false;
    static boolean playerPassFlag = false;
+   static int counter = 0;
    
    static boolean canPlay = false;
    static boolean isCanPlayFlagged = false;
@@ -83,13 +139,14 @@ class GameView
       myCardTable.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       GameModel.DisplayCards displayCards = lowCardGame.getDisplayCards();
       // create labels
-      //playLabelText[0] = new JLabel("Computer", JLabel.CENTER);
-      //playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
       // add Timer
-      int counter = 0;
-      JLabel timer = new JLabel(String.format("%02d", counter));
+      //playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
+      //playLabelText[0] = new JLabel("Computer", JLabel.CENTER);
+      timer = new JLabel("00:00",JLabel.CENTER);
       myCardTable.pnlTimer.add(timer);
       updatePlayArea(lowCardGame, myCardTable, displayCards);
+      myCardTable.pnlTimer.add(startButton);
+      myCardTable.pnlTimer.add(stopButton);
     
       // Start with the Player
       //JButton playButton = new JButton();
@@ -220,7 +277,6 @@ class GameView
                myCardTable.pnlPlayArea.remove(computerLabels[rounds+1]);
                myCardTable.pnlPlayArea.add(computerLabels[rounds]);
                myCardTable.pnlComputerHand.remove(computerCardBacks[rounds]);
-               
                myCardTable.pnlPlayArea.remove(humanLabels[rounds + 1]);
                myCardTable.pnlPlayArea.add(humanLabels[rounds]);
                myCardTable.pnlPlayArea.add(playLabelText[0]);
@@ -257,23 +313,23 @@ class GameView
                if(compScore > playerScore) 
                {
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(compScore) + " Winner", JLabel.CENTER));
+                        toString(compScore) + " Points Scored: Winner", JLabel.CENTER));
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(playerScore), JLabel.CENTER));
+                        toString(playerScore) + " Points Scored", JLabel.CENTER));
                }
                if(compScore < playerScore) 
                {
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(compScore), JLabel.CENTER));
+                        toString(compScore) + " Points Scored", JLabel.CENTER));
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(playerScore) + " Winner", JLabel.CENTER));
+                        toString(playerScore) + " Points Scored: Winner", JLabel.CENTER));
                }
                if(compScore == playerScore)
                {
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(compScore) + "Tie", JLabel.CENTER));
+                        toString(compScore) + " Points Scored: Tie", JLabel.CENTER));
                   myCardTable.pnlPlayArea.add(new JLabel(Integer.
-                        toString(playerScore) + "Tie", JLabel.CENTER));
+                        toString(playerScore) + " Points Scored: Tie", JLabel.CENTER));
                }
             }
 
@@ -700,10 +756,11 @@ class GameView
          add(pnlPlayArea, BorderLayout.CENTER);
          
          // Timer Section
-         pnlTimer = new JPanel(new GridLayout(3, 1));
+         //pnlTimer = new JPanel(new GridLayout(3, 1));
+         pnlTimer = new JPanel(new FlowLayout(FlowLayout.TRAILING));
          pnlTimer.setBorder(new TitledBorder("Game Clock"));
-         pnlTimer.setPreferredSize(new Dimension(200, 600));
-         pnlTimer.setMinimumSize(new Dimension(200, 600));
+         pnlTimer.setPreferredSize(new Dimension(150, 600));
+         pnlTimer.setMinimumSize(new Dimension(150, 600));
          add(pnlTimer, BorderLayout.EAST);
          
          
@@ -730,6 +787,11 @@ class GameView
        */
       int getNumPlayers() { return numPlayers; }
    }
+
+   public void updateTimer() {
+      counter++;
+      timer.setText(String.format("%02d:%02d",counter / 60, (counter % (24*3600))%60));
+   }
 }
 
 // ********************** MODEL ***********************************************
@@ -751,8 +813,6 @@ class GameModel
          NUM_PLAYERS, NUM_CARDS_PER_HAND);
    
    public CardGameFramework getFramework(){ return lowCardGame; }
-   
-   
    
    // class Card *****************************
    static class Card
@@ -1532,15 +1592,36 @@ class GameController
    GameModel theModel;
    GameView theView;
    GameModel.CardGameFramework framework;
+   GameTimer gameTimer;
    
    public GameController(GameModel model, GameView view)
    {
       theModel = model;
-      theView = view;     
+      theView = view;
+      
+      this.theView.addStartListener(new StartListener());
+      this.theView.addStopListener(new StopListener());
    }
    
-   public void init()
+   class StartListener implements ActionListener {
+      public void actionPerformed(ActionEvent e) {
+         gameTimer.startTimer();
+      }
+   }
+   
+   class StopListener implements ActionListener {
+      public void actionPerformed(ActionEvent e) {
+         gameTimer.stopTimer();
+      }
+   }
+
+   public void updateTimer() {
+      theView.updateTimer();
+   }
+
+   public void init(GameTimer gameTimer)
    {
+      this.gameTimer = gameTimer;
       framework = theModel.getFramework();
       framework.deal();
       theView.init(framework);
