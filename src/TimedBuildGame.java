@@ -36,14 +36,54 @@ public class TimedBuildGame
       GameModel model = new GameModel();
       GameView view = new GameView();
       GameController controller = new GameController(model, view);
-      
-      controller.init();
+      GameTimer gameTimer = new GameTimer(controller);
+      controller.init(gameTimer);
+      gameTimer.start();
+   }
+}
+
+class GameTimer extends Thread {
+   private Timer gameTimer;
+   GameController gameController;
+   
+   // Construct class with controller
+   public GameTimer (GameController gameController) {
+      this.gameController = gameController;
+   }
+
+   // Thread run() method override
+   public void run() {
+      gameTimer = new Timer(1000, new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            gameController.updateTimer();
+            doNothing(10);
+         }
+      });
+   }
+   
+   void startTimer() {
+      gameTimer.start();
+   }
+   
+   void stopTimer() {
+      gameTimer.stop();
+   }
+   
+   public void doNothing(int milliseconds) {
+      try {
+         Thread.sleep(milliseconds);
+      }
+      catch(InterruptedException e) {
+         System.out.println("Unexpected interrupt");
+      }
    }
 }
 
 // ********************** VIEW ************************************************
 class GameView
 {
+   GameTimer gameTimer;
+   JLabel timer;
    //JLabel[] computerLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
    //JLabel[] humanLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
    //JLabel[] playedCardLabels = new JLabel[GameModel.NUM_PLAYERS];
@@ -83,11 +123,11 @@ class GameView
       myCardTable.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       GameModel.DisplayCards displayCards = lowCardGame.getDisplayCards();
       // create labels
-      //playLabelText[0] = new JLabel("Computer", JLabel.CENTER);
-      //playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
-      // add Timer
       int counter = 0;
-      JLabel timer = new JLabel(String.format("%02d", counter));
+      // add Timer
+      //playLabelText[1] = new JLabel("Player 1", JLabel.CENTER);
+      //playLabelText[0] = new JLabel("Computer", JLabel.CENTER);
+      timer = new JLabel("00:00",JLabel.CENTER);
       myCardTable.pnlTimer.add(timer);
       updatePlayArea(lowCardGame, myCardTable, displayCards);
     
@@ -729,6 +769,11 @@ class GameView
        * @return the number of players
        */
       int getNumPlayers() { return numPlayers; }
+   }
+
+   public void updateTimer() {
+      counter++;
+      timer.setText(String.format("%02d:%02d",counter / 60, (counter % (24*3600))%60));
    }
 }
 
@@ -1539,8 +1584,25 @@ class GameController
       theView = view;     
    }
    
-   public void init()
+   class StartListener implements ActionListener {
+      public void actionPerformed(ActionEvent e) {
+         gameTimer.startTimer();
+      }
+   }
+   
+   class StopListener implements ActionListener {
+      public void actionPerformed(ActionEvent e) {
+         gameTimer.stopTimer();
+      }
+   }
+
+   public void updateTimer() {
+      theView.updateTimer();
+   }
+
+   public void init(GameTimer gameTimer)
    {
+      this.gameTimer = gameTimer;
       framework = theModel.getFramework();
       framework.deal();
       theView.init(framework);
