@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -11,12 +12,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
 
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
 public class TimedBuildGame
@@ -25,9 +28,6 @@ public class TimedBuildGame
    
    public static void main(String[] args)
    {  
-      int NUM_CARDS_PER_HAND = 7;
-      int NUM_PLAYERS = 2;
-      
       // TODO Auto-generated method stub
       GameModel model = new GameModel();
       GameView view = new GameView();
@@ -41,15 +41,18 @@ public class TimedBuildGame
 class GameView
 {
    JLabel[] computerLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
-   JLabel[] humanLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
-   JLabel[] playedCardLabels = new JLabel[GameModel.NUM_PLAYERS];
+   //JLabel[] humanLabels = new JLabel[GameModel.NUM_CARDS_PER_HAND];
+   //JLabel[] playedCardLabels = new JLabel[GameModel.NUM_PLAYERS];
    JLabel[] playLabelText = new JLabel[GameModel.NUM_PLAYERS];
    JLabel[] computerCardBacks= new JLabel[GameModel.NUM_CARDS_PER_HAND];
-   JLabel[] spacerBackCards = new JLabel[GameModel.NUM_PLAYERS];
+   //JLabel[] spacerBackCards = new JLabel[GameModel.NUM_PLAYERS];
+   JLabel[] leftPlayStack = new JLabel[GameModel.DisplayCards.MAX_STACK_SIZE];
+   JLabel[] middlePlayStack = new JLabel[GameModel.DisplayCards.MAX_STACK_SIZE];
+   JLabel[] rightPlayStack = new JLabel[GameModel.DisplayCards.MAX_STACK_SIZE];
    
    static int playerScore = 0;
    static int compScore = 0;
-   int rounds =  GameModel.NUM_CARDS_PER_HAND;
+   //int rounds =  GameModel.NUM_CARDS_PER_HAND;
    static boolean playFlag = false;
    
    // establish main frame in which program will run
@@ -73,20 +76,109 @@ class GameView
       myCardTable.pnlTimer.add(timer);
     
       // Start with the Player
-      JButton playButton = new JButton();
-      playButton.setText("Play");
-      myCardTable.pnlHumanHand.add(playButton);
+      //JButton playButton = new JButton();
+      //playButton.setText("Play");      
+      //myCardTable.pnlHumanHand.add(playButton);
+      
+      boolean canPlay = false;
+      boolean isCanPlayFlagged = false;
+      
       for(int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) 
       {
+         JButton cardButton = new JButton();
+         cardButton.putClientProperty("index", i);
+         cardButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               // play card from given index
+               JButton btn = (JButton) e.getSource();
+               int index = (int) btn.getClientProperty("index");
+               lowCardGame.playCard(1, index);
+               
+               //TODO: maybe put computer turn here?
+               // separate logic into function, gets called after human turn
+            }
+         });
+         cardButton.setIcon(GUICard.getIcon(lowCardGame.getHand(1)
+               .inspectCard(i)));         
+         cardButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+         cardButton.setBorder(BorderFactory.createEmptyBorder());
+         int cardValue = GUICard
+               .valueAsInt(lowCardGame.getHand(1).inspectCard(i));         
+         int leftCardValue = GUICard.valueAsInt(
+               lowCardGame.getDisplayCards().getLeftStack()[0]);
+         int middleCardValue = GUICard.valueAsInt(
+               lowCardGame.getDisplayCards().getMiddleStack()[0]);
+         int rightCardValue = GUICard.valueAsInt(
+               lowCardGame.getDisplayCards().getRightStack()[0]);
+         if(cardValue != leftCardValue &&
+               (cardValue == leftCardValue - 1 || 
+               cardValue == leftCardValue + 1) ||
+               cardValue != middleCardValue &&
+               (cardValue == middleCardValue - 1 || 
+               cardValue == middleCardValue + 1) || 
+               cardValue != rightCardValue &&
+               (cardValue == rightCardValue - 1 || 
+               cardValue == rightCardValue + 1) 
+               ) 
+         {
+            cardButton.setEnabled(true);
+            if(!isCanPlayFlagged) {
+               isCanPlayFlagged = true;
+               canPlay = true;
+            }
+         }else {
+            cardButton.setEnabled(false);
+         }            
+         
          // Instance of the CardGameFramework instead of LowCardGame 
-         humanLabels[i] = new JLabel(GUICard.getIcon(lowCardGame.getHand(1)
-               .inspectCard(i)));
+         //humanLabels[i] = new JLabel(GUICard.getIcon(lowCardGame.getHand(1)
+           //    .inspectCard(i)));
          // add labels to panels
-         myCardTable.pnlHumanHand.add(humanLabels[i]);
+         myCardTable.pnlHumanHand.add(cardButton);
+         //humanLabels[i]
       }
       
+      JButton passButton = new JButton();
+      //passButton.setEnabled(false);
+      passButton.setText("PASS");
+      passButton.setEnabled(!canPlay);
+      passButton.addActionListener(new ActionListener() {
+         @Override
+         public void actionPerformed(ActionEvent e) {
+            // log the number passes for player
+            playerScore++;
+         }
+         
+      });
+      myCardTable.pnlHumanHand.add(passButton);
+      
+      // Next is the Computer
+      for (int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) {
+         computerLabels[i] = (new JLabel(GUICard.getIcon(lowCardGame.getHand(0).
+                                                         inspectCard(i))));
+         computerCardBacks[i] = new JLabel(GUICard.getBackCardIcon());
+         myCardTable.pnlComputerHand.add(computerCardBacks[i]);
+      }
+      
+      // create 3 stacks
+      GameModel.DisplayCards displayCards = lowCardGame.getDisplayCards();
+      leftPlayStack[0] = new JLabel(GUICard.getIcon(displayCards
+            .getLeftStack()[0]));
+      middlePlayStack[0] = new JLabel(GUICard.getIcon(displayCards
+            .getMiddleStack()[0]));
+      rightPlayStack[0] = new JLabel(GUICard.getIcon(displayCards
+            .getRightStack()[0]));
+      
+      // add top card to the play area to display
+      myCardTable.pnlPlayArea.add(leftPlayStack[0]);
+      myCardTable.pnlPlayArea.add(middlePlayStack[0]);
+      myCardTable.pnlPlayArea.add(rightPlayStack[0]);            
+      
+      // draw card after playing
       
       
+      /*
       playButton.addActionListener(new ActionListener() 
       {
          public void actionPerformed(ActionEvent e) 
@@ -171,26 +263,27 @@ class GameView
             myCardTable.setVisible(true);
          } 
       });
+      */
       
       
       
-      // Next is the Computer
-      for (int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) {
-         computerLabels[i] = (new JLabel(GUICard.getIcon(lowCardGame.getHand(0).
-                                                         inspectCard(i))));
-         computerCardBacks[i] = new JLabel(GUICard.getBackCardIcon());
-         myCardTable.pnlComputerHand.add(computerCardBacks[i]);
-      }
       // Add two spacer card backs
+      /*
       spacerBackCards[0] = new JLabel(GUICard.getBackCardIcon());
       spacerBackCards[1] = new JLabel(GUICard.getBackCardIcon());
       myCardTable.pnlPlayArea.add(spacerBackCards[0]);
       myCardTable.pnlPlayArea.add(spacerBackCards[1]);
       myCardTable.pnlPlayArea.add(playLabelText[0]);
       myCardTable.pnlPlayArea.add(playLabelText[1]);
+      */
       
       // show everything to the user
       myCardTable.setVisible(true);
+      
+      //TODO: remove card from GUI, draw card, use same code for cpu & human 
+         // continue alternating turns till end
+         // check score at end and display winner
+      
    }
    
    // class GUICard ***************************
@@ -376,7 +469,7 @@ class GameView
          add(pnlComputerHand, BorderLayout.NORTH);
          
          // Middle Playing Area
-         pnlPlayArea = new JPanel(new GridLayout(3,2));
+         pnlPlayArea = new JPanel(new GridLayout(1,3));
          pnlPlayArea.setBorder(new TitledBorder("Playing Area"));
          pnlPlayArea.setPreferredSize(new Dimension(600, 600));
          pnlPlayArea.setMinimumSize(new Dimension(600, 600));
@@ -390,13 +483,13 @@ class GameView
          add(pnlTimer, BorderLayout.EAST);
          
          
-         JButton playButton = new JButton();
-         playButton.setText("Play");
+         //JButton playButton = new JButton();
+         //playButton.setText("Play");
          // Bottom Human Player Hand
-         //pnlHumanHand = new JPanel(new GridLayout(1,numCardsPerHand + 1));
+         pnlHumanHand = new JPanel(new GridLayout(1,numCardsPerHand + 1));
          pnlHumanHand = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 0));
          pnlHumanHand.setBorder(new TitledBorder("Your Hand"));
-         pnlHumanHand.setPreferredSize(new Dimension(600,120));
+         //pnlHumanHand.setPreferredSize(new Dimension(600,120));
          pnlHumanHand.setMinimumSize(new Dimension(600, 120));
          add(pnlHumanHand, BorderLayout.SOUTH);
          
@@ -918,6 +1011,11 @@ class GameModel
       private Card[] unusedCardsPerPack; // an array holding the cards not used
                                       // in the game.  e.g. pinochle does not
                                       // use cards 2-8 of any suit
+      private DisplayCards displayCards;
+      
+      public DisplayCards getDisplayCards() {
+         return this.displayCards;
+      }      
 
       public CardGameFramework( int numPacks, int numJokersPerPack,
        int numUnusedCardsPerPack,  Card[] unusedCardsPerPack,
@@ -955,6 +1053,8 @@ class GameModel
          this.numCardsPerHand = numCardsPerHand;
          for (k = 0; k < numUnusedCardsPerPack; k++)
             this.unusedCardsPerPack[k] = unusedCardsPerPack[k];
+         
+         this.displayCards = new DisplayCards();
 
          // prepare deck and shuffle
          newGame();
@@ -1002,7 +1102,7 @@ class GameModel
                deck.addCard( new Card('X', Card.Suit.values()[j]) );
 
          // shuffle the cards
-         deck.shuffle();
+         deck.shuffle();         
       }
 
       public boolean deal()
@@ -1027,7 +1127,17 @@ class GameModel
                   break;
                }
          }
+         
+         // show top three cards to start the game
+         if(deck.getNumCards() > 3) {
+            Card[] startingCards = new Card[] 
+                  {deck.dealCard(), deck.dealCard(), deck.dealCard()}; 
+            displayCards.init(startingCards);
+         }else {
+            enoughCards = false;
+         }
 
+         
          return enoughCards;
       }
 
@@ -1048,8 +1158,13 @@ class GameModel
             //Creates a card that does not work
             return new Card('M', Card.Suit.spades);      
          } 
-         // return the card played
-         return hand[playerIndex].playCard(cardIndex); 
+         
+         Card cardToPlay = hand[playerIndex].playCard(cardIndex);
+         // add the played card to the stack
+         displayCards.addCardToStack(cardToPlay);
+         
+         // return the card played         
+         return  hand[playerIndex].playCard(cardIndex); 
       }
 
       boolean takeCard(int playerIndex)
@@ -1064,7 +1179,115 @@ class GameModel
 
          return hand[playerIndex].takeCard(deck.dealCard());
       }
+      
+     
    }
+   /**
+    * helper class to hold the three stacks in the play area
+    */
+   protected class DisplayCards
+   {
+      static final int MAX_STACK_SIZE = 52;
+      
+      // stack of cards to be displayed, three different stacks
+      private Card[] leftStack;
+      private Card[] middleStack;
+      private Card[] rightStack;
+      
+      // current index of the top card on the stack
+      private int leftStackIndex;
+      private int middleStackIndex;
+      private int rightStackIndex;
+      
+      public Card[] getLeftStack()
+      {
+         return leftStack;
+      }
+
+      public Card[] getMiddleStack()
+      {
+         return middleStack;
+      }
+
+      public Card[] getRightStack()
+      {
+         return rightStack;
+      }
+
+      public int getLeftStackIndex()
+      {
+         return leftStackIndex - 1;
+      }
+
+      public int getMiddleStackIndex()
+      {
+         return middleStackIndex - 1;
+      }
+
+      public int getRightStackIndex()
+      {
+         return rightStackIndex - 1;
+      }
+      
+      public DisplayCards()
+      {
+         leftStack = new Card[MAX_STACK_SIZE];
+         middleStack = new Card[MAX_STACK_SIZE];
+         rightStack = new Card[MAX_STACK_SIZE];
+         leftStackIndex = 0;
+         middleStackIndex = 0;
+         rightStackIndex = 0;
+      }
+      
+      /*
+       * called when first created by deal()
+       * passed in 3 cards, one for each stack
+       */
+      public void init(Card[] cards) {
+         leftStack[0] = new Card(cards[0].value, cards[0].suit);
+         middleStack[0] = new Card(cards[1].value, cards[1].suit);
+         rightStack[0] = new Card(cards[2].value, cards[2].suit);
+      }
+      
+      /**
+       * adds a card to the top of stack first available position 
+       * @param card - the card to be added on the stack
+       * @return - T/F if add was successful
+       */
+      public boolean addCardToStack(Card card) 
+      {  
+         int addCardValue = GameView.GUICard.valueAsInt(card); 
+         int leftCardValue = GameView.GUICard
+               .valueAsInt(leftStack[leftStackIndex]);
+         int middleCardValue = GameView.GUICard
+               .valueAsInt(middleStack[middleStackIndex]);
+         int rightCardValue = GameView.GUICard
+               .valueAsInt(rightStack[rightStackIndex]);         
+         
+         if(addCardValue != leftCardValue &&
+               (addCardValue == leftCardValue + 1 ||
+               addCardValue == leftCardValue - 1)) {
+            leftStackIndex++;
+            leftStack[leftStackIndex] = new Card(card.value, card.suit);               
+         }else if(addCardValue != middleCardValue &&
+               (addCardValue == middleCardValue + 1 ||
+               addCardValue == middleCardValue - 1)) {
+            middleStackIndex++;
+            middleStack[middleStackIndex] = new Card(card.value, card.suit);
+         }else if(addCardValue != rightCardValue &&
+               (addCardValue == rightCardValue + 1 ||
+               addCardValue == rightCardValue - 1)) {
+            rightStackIndex++;
+            rightStack[rightStackIndex] = new Card(card.value, card.suit);               
+         }else {
+            return false; // unplayable 
+         }
+                     
+         return true;
+      }
+      
+   }// end DisplayCards class 
+   
 }
 
 // ***************** CONTROLLER **********************************************
