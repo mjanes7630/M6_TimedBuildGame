@@ -89,13 +89,14 @@ class GameView
       int counter = 0;
       JLabel timer = new JLabel(String.format("%02d", counter));
       myCardTable.pnlTimer.add(timer);
+      updatePlayArea(lowCardGame, myCardTable, displayCards);
     
       // Start with the Player
       //JButton playButton = new JButton();
       //playButton.setText("Play");      
       //myCardTable.pnlHumanHand.add(playButton);    
 //Builds the buttons for the player, and highlights it if the card is playable      
-      for(int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) 
+/*      for(int i = 0; i < GameModel.NUM_CARDS_PER_HAND; i++) 
       {
          JButton cardButton = new JButton();
          cardButton.putClientProperty("index", i);
@@ -113,7 +114,7 @@ class GameView
                //computer's turn              
                computerTurn(lowCardGame, displayCards);
                
-               refreshPlayArea(lowCardGame, myCardTable, displayCards);
+               updatePlayArea(lowCardGame, myCardTable, displayCards);
 
             }
          });
@@ -173,7 +174,7 @@ class GameView
             playerPassFlag = true;
             computerTurn(lowCardGame, displayCards);
             playerScore++;
-            refreshPlayArea(lowCardGame, myCardTable, displayCards);
+            updatePlayArea(lowCardGame, myCardTable, displayCards);
          }
          
       });
@@ -280,28 +281,28 @@ class GameView
             myCardTable.setVisible(true);
          } 
       });
-      */
+      
       
       
       
       // Add two spacer card backs
-      /*
+      
       spacerBackCards[0] = new JLabel(GUICard.getBackCardIcon());
       spacerBackCards[1] = new JLabel(GUICard.getBackCardIcon());
       myCardTable.pnlPlayArea.add(spacerBackCards[0]);
       myCardTable.pnlPlayArea.add(spacerBackCards[1]);
       myCardTable.pnlPlayArea.add(playLabelText[0]);
       myCardTable.pnlPlayArea.add(playLabelText[1]);
-      */
+      
       
       // show everything to the user
       myCardTable.setVisible(true);
   
-      
+*/     
    }
    
    //updates the play area to show the new information
-   public void refreshPlayArea(GameModel.CardGameFramework lowCardGame,
+   public void updatePlayArea(GameModel.CardGameFramework lowCardGame,
          CardTable myCardTable, GameModel.DisplayCards displayCards)
    {
       //checks to see if there is a case where the deck is out of card. If so it
@@ -323,7 +324,7 @@ class GameView
                lowCardGame.getCardFromDeck());
          computerPassFlag = false;
          playerPassFlag = false;
-         refreshPlayArea(lowCardGame, myCardTable, displayCards);
+         updatePlayArea(lowCardGame, myCardTable, displayCards);
       }
       //resets all flags to false
       playerPassFlag = false;
@@ -350,7 +351,7 @@ class GameView
                //computer's turn              
                computerTurn(lowCardGame, displayCards);
 
-               refreshPlayArea(lowCardGame, myCardTable, displayCards);
+               updatePlayArea(lowCardGame, myCardTable, displayCards);
             }
          });
          cardButton.setIcon(GUICard.getIcon(lowCardGame.getHand(1)
@@ -405,7 +406,7 @@ class GameView
             computerTurn(lowCardGame, displayCards);
             playerScore++;
 
-            refreshPlayArea(lowCardGame, myCardTable, displayCards);
+            updatePlayArea(lowCardGame, myCardTable, displayCards);
          }
          
       });
